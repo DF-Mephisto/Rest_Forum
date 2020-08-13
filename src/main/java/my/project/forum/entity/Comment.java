@@ -1,5 +1,7 @@
 package my.project.forum.entity;
 
+import lombok.Data;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -8,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Data
 @Entity
 @Table(name="comment", schema = "public")
 public class Comment {
@@ -39,78 +42,9 @@ public class Comment {
         likes = new ArrayList<>();
     }
 
-    public Comment(String text)
-    {
-        this();
-        this.text = text;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
-
-    public LocalDateTime getPlacedAt() {
-        return placedAt;
-    }
-
-    public void setPlacedAt(LocalDateTime placedAt) {
-        this.placedAt = placedAt;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public Topic getTopic() {
-        return topic;
-    }
-
-    public void setTopic(Topic topic) {
-        this.topic = topic;
-    }
-
-    public List<Like> getLikes() {
-        return likes;
-    }
-
-    public void addLike(Like like)
-    {
-        likes.add(like);
-    }
-
-    public void removeLike(Like like)
-    {
-        likes.remove(like);
-    }
-
     @PrePersist
     public void createdAt()
     {
         setPlacedAt(LocalDateTime.now());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Comment comment = (Comment) o;
-        return Objects.equals(id, comment.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }

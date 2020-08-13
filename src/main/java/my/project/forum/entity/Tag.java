@@ -1,11 +1,14 @@
 package my.project.forum.entity;
 
+import lombok.Data;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 
+@Data
 @Entity
 @Table(name="tag", schema = "public")
 public class Tag {
@@ -26,37 +29,5 @@ public class Tag {
 
     public Tag(){
         topics = new ArrayList<>();
-    }
-
-    public Tag(String name)
-    {
-        this();
-        this.name = name;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public List<Topic> getTopics() {
-        return topics;
-    }
-
-    public void addTopic(Topic topic)
-    {
-        topics.add(topic);
-    }
-
-    public void removeTopic(Topic topic)
-    {
-        topics.remove(topic);
     }
 }
