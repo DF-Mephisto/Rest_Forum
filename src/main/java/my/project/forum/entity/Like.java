@@ -1,12 +1,14 @@
 package my.project.forum.entity;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 
 @Data
 @Entity
 @Table(name="like", schema = "public")
+@NoArgsConstructor
 public class Like {
 
     @Id

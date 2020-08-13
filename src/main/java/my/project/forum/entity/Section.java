@@ -1,6 +1,7 @@
 package my.project.forum.entity;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name="section", schema = "public")
+@NoArgsConstructor
 public class Section {
 
     @Id

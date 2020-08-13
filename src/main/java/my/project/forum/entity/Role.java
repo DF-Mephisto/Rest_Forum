@@ -1,6 +1,7 @@
 package my.project.forum.entity;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -8,6 +9,7 @@ import javax.validation.constraints.*;
 @Data
 @Entity
 @Table(name="role", schema = "public")
+@NoArgsConstructor
 public class Role {
 
     @Id

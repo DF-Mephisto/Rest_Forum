@@ -1,6 +1,8 @@
 package my.project.forum.entity;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -13,6 +15,7 @@ import java.util.Objects;
 @Data
 @Entity
 @Table(name="user_info", schema = "public")
+@NoArgsConstructor
 public class User {
 
     @Id
