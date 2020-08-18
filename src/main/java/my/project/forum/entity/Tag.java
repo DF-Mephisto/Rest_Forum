@@ -5,12 +5,12 @@ import lombok.Data;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Data
 @Entity
-@Table(name="tag", schema = "public")
+@Table(name="tag")
 public class Tag {
 
     @Id
@@ -19,15 +19,16 @@ public class Tag {
 
     @NotBlank(message = "Tag name can't be empty")
     @Size(min=1, max=20, message = "Tag name must be between 1 and 20 in length")
+    @Column(unique = true, nullable = false)
     private String name;
 
     @ManyToMany
     @JoinTable(name = "topic_tag",
             joinColumns = @JoinColumn(name = "tag_id"),
             inverseJoinColumns = @JoinColumn(name = "topic_id"))
-    private List<Topic> topics;
+    private Set<Topic> topics;
 
     public Tag(){
-        topics = new ArrayList<>();
+        topics = new LinkedHashSet<>();
     }
 }

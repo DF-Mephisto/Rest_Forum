@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name="section", schema = "public")
+@Table(name="section")
 @NoArgsConstructor
 public class Section {
 
@@ -20,9 +20,10 @@ public class Section {
 
     @NotBlank(message = "Section name can't be empty")
     @Size(min=1, max=100, message = "Section name must be between 1 and 100 in length")
+    @Column(nullable = false)
     private String name;
 
-    @Column(name="placed_at")
+    @Column(name="placed_at", nullable = false)
     private LocalDateTime placedAt;
 
     @PrePersist
