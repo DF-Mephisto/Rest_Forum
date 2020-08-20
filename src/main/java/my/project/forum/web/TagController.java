@@ -53,8 +53,6 @@ public class TagController {
 
     @PutMapping("/{id}")
     public Tag updateTag(@Valid @RequestBody Tag tag, @PathVariable Long id) {
-        if (tagRepo.findByNameExceptForId(tag.getName(), id).isPresent())
-            throw new ItemAlreadyExistsException("Tag with name " + tag.getName() + " already exists");
 
         Tag savedTag = tagRepo.findById(id)
                 .map(x -> {

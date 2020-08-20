@@ -53,8 +53,6 @@ public class RoleController {
 
     @PutMapping("/{id}")
     public Role updateRole(@Valid @RequestBody Role role, @PathVariable Long id) {
-        if (roleRepo.findByNameExceptForId(role.getName(), id).isPresent())
-            throw new ItemAlreadyExistsException("Role with name " + role.getName() + " already exists");
 
         Role savedRole = roleRepo.findById(id)
                 .map(x -> {

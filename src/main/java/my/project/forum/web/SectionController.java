@@ -1,10 +1,13 @@
 package my.project.forum.web;
 
 import my.project.forum.entity.Section;
+import my.project.forum.entity.Topic;
 import my.project.forum.error.ItemNotFoundException;
 import my.project.forum.repository.SectionRepository;
+import my.project.forum.repository.TopicRepository;
 import my.project.forum.service.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -20,30 +23,33 @@ import java.net.URI;
 @RequestMapping("/sections")
 public class SectionController {
 
-    private SectionRepository SectionRepo;
+    private SectionRepository sectionRepo;
+    private TopicRepository topicRepo;
     private Properties props;
 
     @Autowired
-    public SectionController(SectionRepository SectionRepo,
+    public SectionController(SectionRepository sectionRepo,
+                             TopicRepository topicRepo,
                              Properties props)
     {
-        this.SectionRepo = SectionRepo;
+        this.sectionRepo = sectionRepo;
+        this.topicRepo = topicRepo;
         this.props = props;
     }
 
     @GetMapping(produces = "application/json")
-    public Iterable<Section> getSections(@RequestParam(value = "page", defaultValue = "0") int page)
+    public Page<Section> getSections(@RequestParam(value = "page", defaultValue = "0") int page)
     {
         Pageable pageable = PageRequest.of(page, props.getSectionsPageSize(),
-                Sort.by(Sort.Direction.ASC, "placedAt"));
+                Sort.by(Sort.Direction.DESC, "placedAt"));
 
-        return SectionRepo.findAll(pageable);
+        return sectionRepo.findAll(pageable);
     }
 
-    @PostMapping("/add")
+    @PostMapping
     public ResponseEntity<Object> newSection(@Valid @RequestBody Section section) {
 
-        Section savedSection = SectionRepo.save(section);
+        Section savedSection = sectionRepo.save(section);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
                 .buildAndExpand(savedSection.getId()).toUri();
@@ -54,17 +60,17 @@ public class SectionController {
     @GetMapping("/{id}")
     public Section getSections(@PathVariable Long id)
     {
-        return SectionRepo.findById(id)
+        return sectionRepo.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Section with id " + id + " doesn't exist"));
     }
 
-    @PutMapping("/{id}/edit")
+    @PutMapping("/{id}")
     public Section updateSection(@Valid @RequestBody Section section, @PathVariable Long id) {
 
-        Section savedSection = SectionRepo.findById(id)
+        Section savedSection = sectionRepo.findById(id)
                 .map(x -> {
                     x.setName(section.getName());
-                    return SectionRepo.save(x);
+                    return sectionRepo.save(x);
                 })
                 .orElseThrow(() -> new ItemNotFoundException("Section with id " + id + " doesn't exist"));
 
@@ -72,8 +78,21 @@ public class SectionController {
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{id}/del")
+    @DeleteMapping("/{id}")
     public void deleteSection(@PathVariable Long id) {
-        SectionRepo.deleteById(id);
+        sectionRepo.deleteById(id);
+    }
+
+    @GetMapping("/{id}/topics")
+    public Page<Topic> getSections(@PathVariable Long id,
+                                   @RequestParam(value = "page", defaultValue = "0") int page)
+    {
+        if (sectionRepo.findById(id).isEmpty())
+            throw new ItemNotFoundException("Section with id " + id + " doesn't exist");
+
+        Pageable pageable = PageRequest.of(page, props.getTopicsPageSize(),
+                Sort.by(Sort.Direction.DESC, "placedAt"));
+
+        return topicRepo.findAllBySection_Id(id, pageable);
     }
 }

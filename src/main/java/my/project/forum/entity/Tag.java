@@ -5,8 +5,7 @@ import lombok.Data;
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
-import java.util.LinkedHashSet;
-import java.util.Set;
+
 
 @Data
 @Entity
@@ -22,13 +21,4 @@ public class Tag {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @ManyToMany
-    @JoinTable(name = "topic_tag",
-            joinColumns = @JoinColumn(name = "tag_id"),
-            inverseJoinColumns = @JoinColumn(name = "topic_id"))
-    private Set<Topic> topics;
-
-    public Tag(){
-        topics = new LinkedHashSet<>();
-    }
 }

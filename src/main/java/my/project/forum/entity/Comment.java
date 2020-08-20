@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,7 +19,7 @@ public class Comment {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @NotBlank(message = "Comment can't be empty")
+    @NotBlank(message = "Message can't be empty")
     @Size(min=1, max=1000, message = "Comment must be between 1 and 1000 in length")
     @Column(nullable = false)
     private String text;
@@ -31,18 +32,16 @@ public class Comment {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "topic_id", nullable = false)
+    @JoinColumn(name = "topic_id")
+    @NotNull(message = "Parent topic can't be null")
     private Topic topic;
 
     @ManyToOne
     @JoinColumn(name = "parent_comment_id")
-    private Comment comment;
+    private Comment parentComment;
 
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE)
     private List<Like> likes;
-
-    @OneToMany(mappedBy = "comment", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private List<Comment> comments;
 
     public Comment()
     {

@@ -4,6 +4,7 @@ import lombok.Data;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,10 +37,14 @@ public class Topic {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "section_id", nullable = false)
+    @JoinColumn(name = "section_id")
+    @NotNull(message = "Parent section can't be null")
     private Section section;
 
-    @ManyToMany(mappedBy = "topics")
+    @ManyToMany
+    @JoinTable(name = "topic_tag",
+            joinColumns = @JoinColumn(name = "topic_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id"))
     private Set<Tag> tags;
 
     public Topic(){
@@ -51,5 +56,10 @@ public class Topic {
     public void createdAt()
     {
         setPlacedAt(LocalDateTime.now());
+    }
+
+    public void incrementViews()
+    {
+        views++;
     }
 }

@@ -62,10 +62,8 @@ public class UserController {
                 .orElseThrow(() -> new ItemNotFoundException("User with id " + id + " doesn't exist"));
     }
 
-    @PutMapping("/{id}/edit")
+    @PutMapping("/{id}")
     public User updateUser(@Valid @RequestBody User user, @PathVariable Long id) {
-        if (userRepo.findByUsernameExceptForId(user.getUsername(), id).isPresent())
-            throw new ItemAlreadyExistsException("User with name " + user.getUsername() + " already exists");
 
         Role role = roleRepo.findById(user.getRole().getId())
                 .orElseThrow(() -> new ItemNotFoundException("Role with id " + user.getRole().getId() + " doesn't exist"));
@@ -85,6 +83,12 @@ public class UserController {
         return savedUser;
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}")
+    public void deleteUser(@PathVariable Long id) {
+        userRepo.deleteById(id);
+    }
+
     @PostMapping("/{id}/lock")
     public void lockUser(@PathVariable Long id)
     {
@@ -94,11 +98,5 @@ public class UserController {
                     return userRepo.save(x);
                 })
                 .orElseThrow(() -> new ItemNotFoundException("User with id " + id + " doesn't exist"));
-    }
-
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/{id}/del")
-    public void deleteUser(@PathVariable Long id) {
-        userRepo.deleteById(id);
     }
 }
