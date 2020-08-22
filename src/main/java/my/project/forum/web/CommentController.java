@@ -1,8 +1,10 @@
 package my.project.forum.web;
 
 import my.project.forum.entity.Comment;
+import my.project.forum.entity.Like;
 import my.project.forum.error.ItemNotFoundException;
 import my.project.forum.repository.CommentRepository;
+import my.project.forum.repository.LikeRepository;
 import my.project.forum.service.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,19 +18,23 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/comments")
 public class CommentController {
 
     private CommentRepository commentRepo;
+    private LikeRepository likeRepo;
     private Properties props;
 
     @Autowired
     public CommentController(CommentRepository commentRepo,
-                           Properties props)
+                             LikeRepository likeRepo,
+                             Properties props)
     {
         this.commentRepo = commentRepo;
+        this.likeRepo = likeRepo;
         this.props = props;
     }
 
@@ -61,9 +67,45 @@ public class CommentController {
         return ResponseEntity.created(location).build();
     }
 
+    @GetMapping("/{id}")
+    public Comment getComment(@PathVariable Long id)
+    {
+        return commentRepo.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException("Comment with id " + id + " doesn't exist"));
+    }
+
+    @PutMapping("/{id}")
+    public Comment updateComment(@Valid @RequestBody Comment comment, @PathVariable Long id) {
+
+        Comment savedComment = commentRepo.findById(id)
+                .map(x -> {
+                    x.setText(comment.getText());
+                    return commentRepo.save(x);
+                })
+                .orElseThrow(() -> new ItemNotFoundException("Comment with id " + id + " doesn't exist"));
+
+        return savedComment;
+    }
+
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void deleteComment(@PathVariable Long id) {
         commentRepo.deleteById(id);
+    }
+
+    @GetMapping("/{id}/likes")
+    public Iterable<Like> getLikes(@PathVariable Long id)
+    {
+        if (commentRepo.findById(id).isEmpty())
+            throw new ItemNotFoundException("Comment with id " + id + " doesn't exist");
+
+        return likeRepo.findAllByCommentId(id);
+    }
+
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/{id}/likes")
+    public void deleteLike(@PathVariable Long id) {
+        //Optional<Like> like = likeRepo.findByCommentIdAndUserId(id)
+
     }
 }

@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Data
 @Entity
@@ -16,10 +17,13 @@ public class Like {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name="user_id")
+    @NotNull(message = "User can't be null")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "comment_id", nullable = false)
+    @JoinColumn(name="comment_id")
+    @NotNull(message = "Comment can't be null")
     private Comment comment;
+
 }

@@ -2,7 +2,10 @@ package my.project.forum.web;
 
 import my.project.forum.entity.Comment;
 import my.project.forum.entity.Topic;
+import my.project.forum.entity.User;
+import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemNotFoundException;
+import my.project.forum.patch.TopicPatch;
 import my.project.forum.repository.CommentRepository;
 import my.project.forum.repository.TopicRepository;
 import my.project.forum.service.Properties;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -47,8 +51,11 @@ public class TopicController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> newTopic(@Valid @RequestBody Topic topic) {
+    public ResponseEntity<Object> newTopic(@Valid @RequestBody Topic topic,
+                                           @AuthenticationPrincipal User user) {
 
+        topic.setUser(user);
+        topic.setViews(0L);
         Topic savedTopic = topicRepo.save(topic);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -69,18 +76,24 @@ public class TopicController {
         return t;
     }
 
-    @PutMapping("/{id}")
-    public Topic updateTopic(@Valid @RequestBody Topic topic, @PathVariable Long id) {
+    @PatchMapping("/{id}")
+    public Topic updateTopic(@Valid @RequestBody TopicPatch patch, @PathVariable Long id) {
 
-        Topic savedTopic = topicRepo.findById(id)
-                .map(x -> {
-                    x.setName(topic.getName());
-                    x.setTags(topic.getTags());
-                    return topicRepo.save(x);
-                })
+        Topic patchedTopic = topicRepo.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Topic with id " + id + " doesn't exist"));
 
-        return savedTopic;
+        if (patch.getName() != null)
+        {
+            if (patch.getName().isBlank())
+                throw new ActionNotAllowed("Topic name mustn't be blank");
+
+            patchedTopic.setName(patch.getName());
+        }
+
+        if (patch.getTags() != null)
+            patchedTopic.setTags(patch.getTags());
+
+        return topicRepo.save(patchedTopic);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

@@ -52,4 +52,9 @@ public class CustomGlobalExceptionHandler extends ResponseEntityExceptionHandler
     public void itemHandleAlreadyExists(HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.CONFLICT.value());
     }
+
+    @ExceptionHandler(ActionNotAllowed.class)
+    public void actionHandleNotAllowed(HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.FORBIDDEN.value());
+    }
 }

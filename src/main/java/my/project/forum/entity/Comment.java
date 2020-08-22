@@ -1,18 +1,18 @@
 package my.project.forum.entity;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Entity
 @Table(name="comment")
+@NoArgsConstructor
 public class Comment {
 
     @Id
@@ -39,14 +39,6 @@ public class Comment {
     @ManyToOne
     @JoinColumn(name = "parent_comment_id")
     private Comment parentComment;
-
-    @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE)
-    private List<Like> likes;
-
-    public Comment()
-    {
-        likes = new ArrayList<>();
-    }
 
     @PrePersist
     public void createdAt()

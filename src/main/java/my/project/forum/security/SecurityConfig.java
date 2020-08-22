@@ -3,6 +3,7 @@ package my.project.forum.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,6 +32,26 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure (HttpSecurity http) throws Exception
     {
         http.authorizeRequests()
+                //USER
+                .antMatchers(HttpMethod.POST,"/user/*/lock").hasRole("ADMIN")
+                .antMatchers(HttpMethod.DELETE, "/user/*").authenticated()
+                .antMatchers(HttpMethod.PATCH, "/user/*").authenticated()
+
+                //TOPICS
+                .antMatchers(HttpMethod.DELETE, "/topics/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.PATCH, "/topics/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,"/topics").authenticated()
+
+                //TAG
+                .antMatchers(HttpMethod.DELETE,"/tag/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.PATCH,"/tag/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,"/tag").hasRole("ADMIN")
+
+                //ROLE
+                .antMatchers(HttpMethod.DELETE,"/role/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.PATCH,"/role/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,"/role").hasRole("ADMIN")
+
                 .antMatchers("/", "/**").permitAll()
                 .and().formLogin().loginPage("/login")
                 .and().logout().logoutSuccessUrl("/")

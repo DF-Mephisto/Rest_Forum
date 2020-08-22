@@ -90,9 +90,9 @@ public class SectionController {
         if (sectionRepo.findById(id).isEmpty())
             throw new ItemNotFoundException("Section with id " + id + " doesn't exist");
 
-        Pageable pageable = PageRequest.of(page, props.getTopicsPageSize(),
-                Sort.by(Sort.Direction.DESC, "placedAt"));
+        Pageable pageable = PageRequest.of(page, props.getTopicsPageSize());
 
         return topicRepo.findAllBySection_Id(id, pageable);
     }
+
 }

@@ -1,8 +1,10 @@
 package my.project.forum.web;
 
 import my.project.forum.entity.Role;
+import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
 import my.project.forum.error.ItemNotFoundException;
+import my.project.forum.patch.RolePatch;
 import my.project.forum.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -51,23 +53,42 @@ public class RoleController {
                 .orElseThrow(() -> new ItemNotFoundException("Role with id " + id + " doesn't exist"));
     }
 
-    @PutMapping("/{id}")
-    public Role updateRole(@Valid @RequestBody Role role, @PathVariable Long id) {
+    @PatchMapping("/{id}")
+    public Role updateRole(@Valid @RequestBody RolePatch patch, @PathVariable Long id) {
 
-        Role savedRole = roleRepo.findById(id)
-                .map(x -> {
-                    x.setName(role.getName());
-                    x.setColor(role.getColor());
-                    return roleRepo.save(x);
-                })
+        Role patchedRole = roleRepo.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Role with id " + id + " doesn't exist"));
 
-        return savedRole;
+        if (patch.getName() != null)
+        {
+            if (patchedRole.getName().equals("ROLE_ADMIN"))
+                throw new ActionNotAllowed("Admin role can't be renamed");
+
+            if (patch.getName().isBlank())
+                throw new ActionNotAllowed("Role name mustn't be blank");
+
+            if (!patchedRole.getName().equals(patch.getName()) && roleRepo.findByName(patch.getName()).isPresent())
+                throw new ItemAlreadyExistsException("Role with name " + patch.getName() + " already exists");
+
+            patchedRole.setName(patch.getName());
+        }
+
+        if (patch.getColor() != null)
+            patchedRole.setColor(patch.getColor());
+
+        return roleRepo.save(patchedRole);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
     public void deleteRole(@PathVariable Long id) {
+
+        Role role = roleRepo.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException("Role with id " + id + " doesn't exist"));
+
+        if (role.getName().equals("ROLE_ADMIN"))
+            throw new ActionNotAllowed("Admin role can't be removed");
+
         roleRepo.deleteById(id);
     }
 }

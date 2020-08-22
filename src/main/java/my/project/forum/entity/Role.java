@@ -25,4 +25,5 @@ public class Role {
     @Max(value = 0xFFFFFF, message = "Wrong color value")
     @NotNull(message = "Color can't be null")
     private Integer color;
+
 }

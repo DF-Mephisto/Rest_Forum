@@ -8,10 +8,10 @@ create table if not exists gen.comment (id int8 not null,
                                         user_id int8,
                                         primary key (id));
 
-create table if not exists gen.like (id int8 not null,
-                                     comment_id int8 not null,
-                                     user_id int8 not null,
-                                     primary key (id));
+create table gen.like (id int8 not null,
+                       comment_id int8 not null,
+                       user_id int8 not null,
+                       primary key (id));
 
 create table if not exists gen.role (id int8 not null,
                                      color int4 not null check (color>=0 AND color<=16777215),
@@ -58,6 +58,9 @@ alter table if exists gen.tag
 
 alter table if exists gen.user_info
     add constraint UK_f2ksd6h8hsjtd57ipfq9myr64 unique (username);
+
+alter table if exists gen.like
+    add constraint UQ_UserId_CommentID unique(user_id, comment_id);
 
 alter table if exists gen.comment
     add constraint FKhvh0e2ybgg16bpu229a5teje7

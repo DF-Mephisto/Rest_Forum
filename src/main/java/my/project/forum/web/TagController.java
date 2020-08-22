@@ -1,8 +1,10 @@
 package my.project.forum.web;
 
 import my.project.forum.entity.Tag;
+import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
 import my.project.forum.error.ItemNotFoundException;
+import my.project.forum.patch.TagPatch;
 import my.project.forum.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -51,17 +53,24 @@ public class TagController {
                 .orElseThrow(() -> new ItemNotFoundException("Tag with id " + id + " doesn't exist"));
     }
 
-    @PutMapping("/{id}")
-    public Tag updateTag(@Valid @RequestBody Tag tag, @PathVariable Long id) {
+    @PatchMapping("/{id}")
+    public Tag updateTag(@Valid @RequestBody TagPatch patch, @PathVariable Long id) {
 
-        Tag savedTag = tagRepo.findById(id)
-                .map(x -> {
-                    x.setName(tag.getName());
-                    return tagRepo.save(x);
-                })
+        Tag patchedTag = tagRepo.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Tag with id " + id + " doesn't exist"));
 
-        return savedTag;
+        if (patch.getName() != null)
+        {
+            if (patch.getName().isBlank())
+                throw new ActionNotAllowed("Tag name mustn't be blank");
+
+            if (!patchedTag.getName().equals(patch.getName()) && tagRepo.findByName(patch.getName()).isPresent())
+                throw new ItemAlreadyExistsException("Tag with name " + patch.getName() + " already exists");
+
+            patchedTag.setName(patch.getName());
+        }
+
+        return tagRepo.save(patchedTag);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)

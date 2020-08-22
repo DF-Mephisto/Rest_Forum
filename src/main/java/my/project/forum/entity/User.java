@@ -1,5 +1,6 @@
 package my.project.forum.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,6 +17,7 @@ import java.util.Objects;
 @Data
 @Entity
 @Table(name="user_info")
+@JsonIgnoreProperties(value = "password", allowSetters = true)
 public class User implements UserDetails {
 
     @Id

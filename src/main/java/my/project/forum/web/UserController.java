@@ -1,19 +1,25 @@
 package my.project.forum.web;
 
-import my.project.forum.entity.Role;
-import my.project.forum.entity.Tag;
 import my.project.forum.entity.User;
+import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
 import my.project.forum.error.ItemNotFoundException;
+import my.project.forum.patch.UserProfilePatch;
 import my.project.forum.repository.RoleRepository;
 import my.project.forum.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URI;
 
@@ -62,30 +68,83 @@ public class UserController {
                 .orElseThrow(() -> new ItemNotFoundException("User with id " + id + " doesn't exist"));
     }
 
-    @PutMapping("/{id}")
-    public User updateUser(@Valid @RequestBody User user, @PathVariable Long id) {
+    @PatchMapping("/{id}")
+    public User updateUser(@Valid @RequestBody UserProfilePatch patch,
+                           @PathVariable Long id,
+                           @AuthenticationPrincipal User user) {
 
-        Role role = roleRepo.findById(user.getRole().getId())
-                .orElseThrow(() -> new ItemNotFoundException("Role with id " + user.getRole().getId() + " doesn't exist"));
+        boolean hasAdminRole = user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-        User savedUser = userRepo.findById(id)
-                .map(x -> {
-                    x.setUsername(user.getUsername());
-                    x.setPassword(encoder.encode(user.getPassword()));
-                    x.setAvatar(user.getAvatar());
-                    x.setEmail(user.getEmail());
-                    x.setInformation(user.getInformation());
-                    x.setRole(role);
-                    return userRepo.save(x);
-                })
+        boolean sameUser = user.getId().equals(id);
+
+        if (!sameUser && !hasAdminRole)
+            throw new ActionNotAllowed("Access denied");
+
+        User patchedUser = userRepo.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("User with id " + id + " doesn't exist"));
 
-        return savedUser;
+        //Admin only patches
+        if (hasAdminRole)
+        {
+            if (patch.getRole() != null)
+                patchedUser.setRole(roleRepo.findById(patch.getRole().getId())
+                        .orElseThrow(() -> new ItemNotFoundException("Role with id " + patch.getRole().getId() + " doesn't exist")));
+
+            if (patch.getUsername() != null)
+            {
+                if (!patchedUser.getUsername().equals(patch.getUsername()) && userRepo.findByUsername(patch.getUsername()).isPresent())
+                    throw new ItemAlreadyExistsException("User with name " + patch.getUsername() + " already exists");
+
+                patchedUser.setUsername(patch.getUsername());
+            }
+        }
+
+        //User only patches
+        if (sameUser)
+        {
+            if (patch.getEmail() != null)
+                patchedUser.setEmail(patch.getEmail());
+
+            if (patch.getPassword() != null)
+            {
+                if (patch.getOldPassword() == null || !encoder.matches(patch.getOldPassword(), user.getPassword()))
+                    throw new ActionNotAllowed("Old password doesn't match current password");
+
+                patchedUser.setPassword(encoder.encode(patch.getPassword()));
+            }
+        }
+
+        if (patch.getInformation() != null)
+            patchedUser.setInformation(patch.getInformation());
+
+        if (patch.getAvatar() != null)
+            patchedUser.setAvatar(patch.getAvatar());
+
+        userRepo.save(patchedUser);
+
+        if (sameUser)
+        {
+            Authentication authentication = new UsernamePasswordAuthenticationToken(patchedUser, patchedUser.getPassword(), patchedUser.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
+        return patchedUser;
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable Long id) {
+    public void deleteUser(@PathVariable Long id,
+                           @AuthenticationPrincipal User user,
+                           HttpServletRequest request) throws ServletException {
+
+        if (!user.getId().equals(id) && !user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN")))
+            throw new ActionNotAllowed("Access denied");
+
+        if (user.getId().equals(id))
+            request.logout();
+
         userRepo.deleteById(id);
     }
 
