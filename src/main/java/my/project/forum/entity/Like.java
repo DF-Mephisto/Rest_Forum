@@ -17,8 +17,7 @@ public class Like {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name="user_id")
-    @NotNull(message = "User can't be null")
+    @JoinColumn(name="user_id", nullable = false)
     private User user;
 
     @ManyToOne

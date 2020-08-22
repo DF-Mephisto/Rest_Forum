@@ -52,6 +52,20 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.PATCH,"/role/*").hasRole("ADMIN")
                 .antMatchers(HttpMethod.POST,"/role").hasRole("ADMIN")
 
+                //SECTIONS
+                .antMatchers(HttpMethod.DELETE,"/sections/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.PATCH,"/sections/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,"/sections").hasRole("ADMIN")
+
+                //COMMENTS
+                .antMatchers(HttpMethod.DELETE,"/comments/*/likes").authenticated()
+                .antMatchers(HttpMethod.DELETE, "/comments/*").authenticated()
+                .antMatchers(HttpMethod.PATCH, "/comments/*").authenticated()
+                .antMatchers(HttpMethod.POST,"/comments").authenticated()
+
+                //LIKES
+                .antMatchers(HttpMethod.POST,"/likes").authenticated()
+
                 .antMatchers("/", "/**").permitAll()
                 .and().formLogin().loginPage("/login")
                 .and().logout().logoutSuccessUrl("/")

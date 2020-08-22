@@ -1,8 +1,10 @@
 package my.project.forum.web;
 
 import my.project.forum.entity.Like;
+import my.project.forum.entity.User;
 import my.project.forum.repository.LikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
@@ -25,8 +27,10 @@ public class LikeController {
     }
 
     @PostMapping
-    public void newLike(@Valid @RequestBody Like like) {
+    public void newLike(@Valid @RequestBody Like like,
+                        @AuthenticationPrincipal User user) {
 
+        like.setUser(user);
         likeRepo.save(like);
     }
 }

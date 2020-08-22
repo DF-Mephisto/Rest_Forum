@@ -2,7 +2,10 @@ package my.project.forum.web;
 
 import my.project.forum.entity.Comment;
 import my.project.forum.entity.Like;
+import my.project.forum.entity.User;
+import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemNotFoundException;
+import my.project.forum.patch.CommentPatch;
 import my.project.forum.repository.CommentRepository;
 import my.project.forum.repository.LikeRepository;
 import my.project.forum.service.Properties;
@@ -13,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -48,7 +53,8 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> newComment(@Valid @RequestBody Comment comment) {
+    public ResponseEntity<Object> newComment(@Valid @RequestBody Comment comment,
+                                             @AuthenticationPrincipal User user) {
         if (comment.getParentComment() != null)
         {
             Comment parent = commentRepo.findById(comment.getParentComment().getId())
@@ -59,6 +65,7 @@ public class CommentController {
                 throw new ItemNotFoundException("Invalid parent comment");
         }
 
+        comment.setUser(user);
         Comment savedComment = commentRepo.save(comment);
 
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -74,22 +81,51 @@ public class CommentController {
                 .orElseThrow(() -> new ItemNotFoundException("Comment with id " + id + " doesn't exist"));
     }
 
-    @PutMapping("/{id}")
-    public Comment updateComment(@Valid @RequestBody Comment comment, @PathVariable Long id) {
+    @PatchMapping("/{id}")
+    public Comment updateComment(@Valid @RequestBody CommentPatch patch,
+                                 @PathVariable Long id,
+                                 @AuthenticationPrincipal User user) {
 
-        Comment savedComment = commentRepo.findById(id)
-                .map(x -> {
-                    x.setText(comment.getText());
-                    return commentRepo.save(x);
-                })
+        Comment comment = commentRepo.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Comment with id " + id + " doesn't exist"));
 
-        return savedComment;
+        boolean hasRoleAdmin = user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean sameUser = (comment.getUser() != null) && user.getId().equals(comment.getUser().getId());
+
+        if (!hasRoleAdmin && !sameUser)
+            throw new ActionNotAllowed("Access denied");
+
+        Comment patchedComment = commentRepo.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException("Comment with id " + id + " doesn't exist"));
+
+        if (patch.getText() != null)
+        {
+            if (patch.getText().isBlank())
+                throw new ActionNotAllowed("Message mustn't be blank");
+
+            patchedComment.setText(patch.getText());
+        }
+
+        return commentRepo.save(patchedComment);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
-    public void deleteComment(@PathVariable Long id) {
+    public void deleteComment(@PathVariable Long id,
+                              @AuthenticationPrincipal User user) {
+        Comment comment = commentRepo.findById(id)
+                .orElseThrow(() -> new ItemNotFoundException("Comment with id " + id + " doesn't exist"));
+
+        boolean hasRoleAdmin = user.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        boolean sameUser = (comment.getUser() != null) && user.getId().equals(comment.getUser().getId());
+
+        if (!hasRoleAdmin && !sameUser)
+            throw new ActionNotAllowed("Access denied");
+
         commentRepo.deleteById(id);
     }
 
@@ -102,10 +138,12 @@ public class CommentController {
         return likeRepo.findAllByCommentId(id);
     }
 
+    @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}/likes")
-    public void deleteLike(@PathVariable Long id) {
-        //Optional<Like> like = likeRepo.findByCommentIdAndUserId(id)
+    public void deleteLike(@PathVariable Long id,
+                           @AuthenticationPrincipal User user) {
+        likeRepo.deleteByCommentIdAndUserId(id, user.getId());
 
     }
 }

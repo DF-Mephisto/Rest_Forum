@@ -2,7 +2,9 @@ package my.project.forum.web;
 
 import my.project.forum.entity.Section;
 import my.project.forum.entity.Topic;
+import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemNotFoundException;
+import my.project.forum.patch.SectionPatch;
 import my.project.forum.repository.SectionRepository;
 import my.project.forum.repository.TopicRepository;
 import my.project.forum.service.Properties;
@@ -64,17 +66,21 @@ public class SectionController {
                 .orElseThrow(() -> new ItemNotFoundException("Section with id " + id + " doesn't exist"));
     }
 
-    @PutMapping("/{id}")
-    public Section updateSection(@Valid @RequestBody Section section, @PathVariable Long id) {
+    @PatchMapping("/{id}")
+    public Section updateSection(@Valid @RequestBody SectionPatch patch, @PathVariable Long id) {
 
-        Section savedSection = sectionRepo.findById(id)
-                .map(x -> {
-                    x.setName(section.getName());
-                    return sectionRepo.save(x);
-                })
+        Section patchedSection = sectionRepo.findById(id)
                 .orElseThrow(() -> new ItemNotFoundException("Section with id " + id + " doesn't exist"));
 
-        return savedSection;
+        if (patch.getName() != null)
+        {
+            if (patch.getName().isBlank())
+                throw new ActionNotAllowed("Section name mustn't be blank");
+
+            patchedSection.setName(patch.getName());
+        }
+
+        return sectionRepo.save(patchedSection);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
