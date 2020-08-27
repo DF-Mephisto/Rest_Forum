@@ -1,7 +1,12 @@
 package my.project.forum.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,6 +23,7 @@ import java.util.Objects;
 @Entity
 @Table(name="user_info")
 @JsonIgnoreProperties(value = "password", allowSetters = true)
+@AllArgsConstructor
 public class User implements UserDetails {
 
     @Id
@@ -30,7 +36,7 @@ public class User implements UserDetails {
     private String username;
 
     @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{8,}$",
-            message = "Password must be minimum 8 characters in length and include at least one digit, lower-case" +
+            message = "Password must be minimum 8 characters in length and include at least one digit, lower-case, " +
                       "upper-case and special characters and mustn't include any space symbols")
     @NotNull(message = "Password can't be null")
     private String password;
@@ -42,6 +48,7 @@ public class User implements UserDetails {
     @NotNull(message = "Email can't be null")
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name="registration_date", nullable = false)
     private LocalDate registrationDate;
 

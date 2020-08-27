@@ -1,5 +1,6 @@
 package my.project.forum.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -24,6 +25,7 @@ public class Topic {
     @Column(nullable = false)
     private String name;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name="placed_at", nullable = false)
     private LocalDateTime placedAt;
 

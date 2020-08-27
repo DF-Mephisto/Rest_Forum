@@ -1,10 +1,14 @@
 package my.project.forum.patch;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.*;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class RolePatch {
 
     @Size(min=1, max=20, message = "Role name must be between 1 and 20 in length")

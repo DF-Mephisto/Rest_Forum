@@ -1,5 +1,6 @@
 package my.project.forum.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -24,6 +25,7 @@ public class Comment {
     @Column(nullable = false)
     private String text;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name="placed_at", nullable = false)
     private LocalDateTime placedAt;
 

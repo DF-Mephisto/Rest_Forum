@@ -1,11 +1,15 @@
 package my.project.forum.patch;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import my.project.forum.entity.Role;
 
 import javax.validation.constraints.*;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserProfilePatch {
 
     @Size(min=4, max=20, message = "Name must be between 4 and 20 in length")

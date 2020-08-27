@@ -27,10 +27,10 @@ public class LikeController {
     }
 
     @PostMapping
-    public void newLike(@Valid @RequestBody Like like,
+    public Like newLike(@Valid @RequestBody Like like,
                         @AuthenticationPrincipal User user) {
 
         like.setUser(user);
-        likeRepo.save(like);
+        return likeRepo.save(like);
     }
 }

@@ -1,5 +1,7 @@
 package my.project.forum.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -12,6 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name="section")
 @NoArgsConstructor
+@AllArgsConstructor
 public class Section {
 
     @Id
@@ -23,6 +26,7 @@ public class Section {
     @Column(nullable = false)
     private String name;
 
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Column(name="placed_at", nullable = false)
     private LocalDateTime placedAt;
 
