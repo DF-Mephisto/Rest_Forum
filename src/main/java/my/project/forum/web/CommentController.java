@@ -1,5 +1,6 @@
 package my.project.forum.web;
 
+import my.project.forum.dto.CommentDto;
 import my.project.forum.entity.Comment;
 import my.project.forum.entity.Like;
 import my.project.forum.entity.User;
@@ -9,6 +10,8 @@ import my.project.forum.patch.CommentPatch;
 import my.project.forum.repository.CommentRepository;
 import my.project.forum.repository.LikeRepository;
 import my.project.forum.service.Properties;
+import org.modelmapper.ModelMapper;
+import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,7 +26,6 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/comments")
@@ -53,8 +55,11 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> newComment(@Valid @RequestBody Comment comment,
+    public ResponseEntity<Object> newComment(@Valid @RequestBody CommentDto commentDto,
                                              @AuthenticationPrincipal User user) {
+
+        Comment comment = commentDtoToComment(commentDto);
+
         if (comment.getParentComment() != null)
         {
             Comment parent = commentRepo.findById(comment.getParentComment().getId())
@@ -97,18 +102,15 @@ public class CommentController {
         if (!hasRoleAdmin && !sameUser)
             throw new ActionNotAllowed("Access denied");
 
-        Comment patchedComment = commentRepo.findById(id)
-                .orElseThrow(() -> new ItemNotFoundException("Comment with id " + id + " doesn't exist"));
-
         if (patch.getText() != null)
         {
             if (patch.getText().isBlank())
                 throw new ActionNotAllowed("Message mustn't be blank");
 
-            patchedComment.setText(patch.getText());
+            comment.setText(patch.getText());
         }
 
-        return commentRepo.save(patchedComment);
+        return commentRepo.save(comment);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -145,5 +147,12 @@ public class CommentController {
                            @AuthenticationPrincipal User user) {
         likeRepo.deleteByCommentIdAndUserId(id, user.getId());
 
+    }
+
+    private Comment commentDtoToComment(CommentDto commentDto)
+    {
+        ModelMapper modelMapper = new ModelMapper();
+
+        return modelMapper.map(commentDto, Comment.class);
     }
 }

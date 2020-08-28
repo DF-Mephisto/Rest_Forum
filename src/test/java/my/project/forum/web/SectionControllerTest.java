@@ -1,12 +1,13 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.RoleBuilder;
-import my.project.forum.builder.SectionBuilder;
-import my.project.forum.entity.Role;
+import my.project.forum.builder.dto.SectionDtoBuilder;
+import my.project.forum.builder.entity.SectionBuilder;
+import my.project.forum.builder.entity.TopicBuilder;
+import my.project.forum.dto.SectionDto;
 import my.project.forum.entity.Section;
+import my.project.forum.entity.Topic;
 import my.project.forum.patch.SectionPatch;
-import my.project.forum.repository.RoleRepository;
 import my.project.forum.repository.SectionRepository;
 import my.project.forum.repository.TopicRepository;
 import my.project.forum.security.UserRepositoryUserDetailsService;
@@ -14,7 +15,6 @@ import my.project.forum.service.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,11 +118,11 @@ public class SectionControllerTest {
 
         ObjectMapper mapper = new ObjectMapper();
 
-        Section section = new SectionBuilder().name(" ").build();
+        SectionDto sectionDto = new SectionDtoBuilder().name(" ").build();
 
         mockMvc.perform(post("/sections")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsBytes(section))
+                .content(mapper.writeValueAsBytes(sectionDto))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -139,14 +139,14 @@ public class SectionControllerTest {
     public void add_Section_ShouldAddSectionAndReturnLocationHeader() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
 
-        Section section = new SectionBuilder().name("Programming").build();
+        SectionDto sectionDto = new SectionDtoBuilder().name("Programming").build();
         Section added = new SectionBuilder().id(1L).name("Programming").build();
 
         when(sectionRepo.save(ArgumentMatchers.any(Section.class))).thenReturn(added);
 
         mockMvc.perform(post("/sections")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsBytes(section))
+                .content(mapper.writeValueAsBytes(sectionDto))
         )
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", "http://localhost/sections/1"));
@@ -231,4 +231,44 @@ public class SectionControllerTest {
     }
 
     //GET TOPICS
+    @Test
+    public void findTopicsBySectionId_SectionNotFound_ShouldReturnHttpStatusCode404() throws Exception {
+        mockMvc.perform(get("/sections/{id}/topics", 1L))
+                .andExpect(status().isNotFound());
+
+        verify(sectionRepo, times(1)).findById(1L);
+        verifyNoMoreInteractions(sectionRepo);
+    }
+
+    @Test
+    public void findTopicsBySectionId_Section_ShouldReturnFoundTopics() throws Exception {
+
+        Section found = new SectionBuilder().id(1L).build();
+
+        Topic topic1 = new TopicBuilder().id(0L).name("Spring Framework").build();
+        Topic topic2 = new TopicBuilder().id(1L).name("Hibernate").build();
+
+        when(sectionRepo.findById(1L)).thenReturn(Optional.ofNullable(found));
+        Mockito.when(topicRepo.findAllBySection_Id(eq(1L), any()))
+                .thenReturn(new PageImpl<>(Arrays.asList(topic1, topic2)));
+        Mockito.when(props.getTopicsPageSize()).thenReturn(2);
+
+        mockMvc.perform(get("/sections/{id}/topics", 1L)
+                .param("page", "0")
+        )
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.content[0].id", is(0)))
+                .andExpect(jsonPath("$.content[0].name", is("Spring Framework")))
+                .andExpect(jsonPath("$.content[1].id", is(1)))
+                .andExpect(jsonPath("$.content[1].name", is("Hibernate")));
+
+        verify(sectionRepo, times(1)).findById(1L);
+        verifyNoMoreInteractions(sectionRepo);
+
+        verify(topicRepo, times(1)).findAllBySection_Id(eq(1L), any());
+        verifyNoMoreInteractions(topicRepo);
+    }
+
 }

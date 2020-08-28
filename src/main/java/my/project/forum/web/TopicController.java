@@ -1,5 +1,6 @@
 package my.project.forum.web;
 
+import my.project.forum.dto.TopicDto;
 import my.project.forum.entity.Comment;
 import my.project.forum.entity.Topic;
 import my.project.forum.entity.User;
@@ -9,6 +10,7 @@ import my.project.forum.patch.TopicPatch;
 import my.project.forum.repository.CommentRepository;
 import my.project.forum.repository.TopicRepository;
 import my.project.forum.service.Properties;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -51,8 +53,10 @@ public class TopicController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> newTopic(@Valid @RequestBody Topic topic,
+    public ResponseEntity<Object> newTopic(@Valid @RequestBody TopicDto topicDto,
                                            @AuthenticationPrincipal User user) {
+
+        Topic topic = topicDtoToTopic(topicDto);
 
         topic.setUser(user);
         topic.setViews(0L);
@@ -113,5 +117,11 @@ public class TopicController {
                 Sort.by(Sort.Direction.DESC, "placedAt"));
 
         return commentRepo.findAllByTopic_Id(id, pageable);
+    }
+
+    private Topic topicDtoToTopic(TopicDto topicDto)
+    {
+        ModelMapper modelMapper = new ModelMapper();
+        return modelMapper.map(topicDto, Topic.class);
     }
 }

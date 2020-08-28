@@ -1,5 +1,6 @@
 package my.project.forum.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import javax.validation.constraints.NotNull;
 @Entity
 @Table(name="like")
 @NoArgsConstructor
+@AllArgsConstructor
 public class Like {
 
     @Id

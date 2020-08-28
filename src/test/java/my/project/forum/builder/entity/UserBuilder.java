@@ -1,4 +1,4 @@
-package my.project.forum.builder;
+package my.project.forum.builder.entity;
 
 import my.project.forum.entity.Role;
 import my.project.forum.entity.User;
@@ -6,16 +6,6 @@ import my.project.forum.entity.User;
 import java.time.LocalDate;
 
 public class UserBuilder {
-
-    /*private Long id = 0L;
-    private String username = "test user";
-    private String password = "tT1#1111";
-    private String information = "user info";
-    private String email = "test@test.com";
-    private LocalDate registrationDate = LocalDate.of(2020, 8, 27);
-    private byte[] avatar = {1, 2, 3};
-    private Role role = new RoleBuilder().id(0L).name("ROLE_USER").color(0xFFFFFF).build();
-    private boolean nonLocked = true;*/
 
     private Long id = 0L;
     private String username = "test user";

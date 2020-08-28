@@ -1,4 +1,4 @@
-package my.project.forum.builder;
+package my.project.forum.builder.entity;
 
 import my.project.forum.entity.Tag;
 

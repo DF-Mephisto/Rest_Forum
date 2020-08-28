@@ -1,5 +1,6 @@
 package my.project.forum.web;
 
+import my.project.forum.dto.SectionDto;
 import my.project.forum.entity.Section;
 import my.project.forum.entity.Topic;
 import my.project.forum.error.ActionNotAllowed;
@@ -8,6 +9,7 @@ import my.project.forum.patch.SectionPatch;
 import my.project.forum.repository.SectionRepository;
 import my.project.forum.repository.TopicRepository;
 import my.project.forum.service.Properties;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -49,7 +51,8 @@ public class SectionController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> newSection(@Valid @RequestBody Section section) {
+    public ResponseEntity<Object> newSection(@Valid @RequestBody SectionDto sectionDto) {
+        Section section = sectionDtoToSection(sectionDto);
 
         Section savedSection = sectionRepo.save(section);
 
@@ -90,7 +93,7 @@ public class SectionController {
     }
 
     @GetMapping("/{id}/topics")
-    public Page<Topic> getSections(@PathVariable Long id,
+    public Page<Topic> getSectionTopics(@PathVariable Long id,
                                    @RequestParam(value = "page", defaultValue = "0") int page)
     {
         if (sectionRepo.findById(id).isEmpty())
@@ -101,4 +104,9 @@ public class SectionController {
         return topicRepo.findAllBySection_Id(id, pageable);
     }
 
+    private Section sectionDtoToSection(SectionDto sectionDto)
+    {
+        ModelMapper modelMapper = new ModelMapper();
+        return modelMapper.map(sectionDto, Section.class);
+    }
 }

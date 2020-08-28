@@ -1,7 +1,7 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.RoleBuilder;
+import my.project.forum.builder.entity.RoleBuilder;
 import my.project.forum.entity.Role;
 import my.project.forum.repository.RoleRepository;
 import my.project.forum.security.UserRepositoryUserDetailsService;
@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Arrays;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;

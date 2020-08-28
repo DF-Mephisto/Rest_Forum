@@ -1,5 +1,6 @@
 package my.project.forum.web;
 
+import my.project.forum.dto.UserDto;
 import my.project.forum.entity.User;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
@@ -7,6 +8,7 @@ import my.project.forum.error.ItemNotFoundException;
 import my.project.forum.patch.UserProfilePatch;
 import my.project.forum.repository.RoleRepository;
 import my.project.forum.repository.UserRepository;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +50,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<Object> newUser(@Valid @RequestBody User user) {
+    public ResponseEntity<Object> newUser(@Valid @RequestBody UserDto userDto) {
+        User user = userDtoToUser(userDto);
+
         if (userRepo.findByUsername(user.getUsername()).isPresent())
             throw new ItemAlreadyExistsException("User with name " + user.getUsername() + " already exists");
 
@@ -149,13 +153,19 @@ public class UserController {
     }
 
     @PostMapping("/{id}/lock")
-    public void lockUser(@PathVariable Long id)
+    public User lockUser(@PathVariable Long id)
     {
-        userRepo.findById(id)
+        return userRepo.findById(id)
                 .map(x -> {
                     x.setNonLocked(!x.isNonLocked());
                     return userRepo.save(x);
                 })
                 .orElseThrow(() -> new ItemNotFoundException("User with id " + id + " doesn't exist"));
+    }
+
+    private User userDtoToUser(UserDto userDto)
+    {
+        ModelMapper modelMapper = new ModelMapper();
+        return modelMapper.map(userDto, User.class);
     }
 }

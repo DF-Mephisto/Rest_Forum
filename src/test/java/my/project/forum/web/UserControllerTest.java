@@ -1,45 +1,47 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.RoleBuilder;
-import my.project.forum.builder.UserBuilder;
+import my.project.forum.builder.dto.UserDtoBuilder;
+import my.project.forum.builder.entity.RoleBuilder;
+import my.project.forum.builder.entity.UserBuilder;
+import my.project.forum.dto.UserDto;
 import my.project.forum.entity.Role;
 import my.project.forum.entity.User;
+import my.project.forum.error.CustomGlobalExceptionHandler;
+import my.project.forum.patch.UserProfilePatch;
 import my.project.forum.repository.RoleRepository;
 import my.project.forum.repository.UserRepository;
-import my.project.forum.security.UserRepositoryUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.support.WebDataBinderFactory;
+import org.springframework.web.context.request.NativeWebRequest;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.method.support.ModelAndViewContainer;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest(controllers = UserController.class)
 public class UserControllerTest {
 
-    @Autowired
+    //@Autowired
     private MockMvc mockMvc;
-
-    @MockBean
-    private UserRepositoryUserDetailsService userRepoService;
 
     @MockBean
     private UserRepository userRepo;
@@ -47,13 +49,17 @@ public class UserControllerTest {
     @MockBean
     private RoleRepository roleRepo;
 
-    @Autowired
+    @MockBean
     private PasswordEncoder encoder;
 
     @BeforeEach
     public void setUp()
     {
-
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(new UserController(userRepo, roleRepo, encoder))
+                .setControllerAdvice(new CustomGlobalExceptionHandler())
+                .setCustomArgumentResolvers(putAuthenticationPrincipal)
+                .build();
     }
 
     //GET
@@ -119,24 +125,241 @@ public class UserControllerTest {
 
         ObjectMapper mapper = new ObjectMapper();
 
-        User user = new UserBuilder().username(" ")
+        UserDto userDto = new UserDtoBuilder().username(" ")
                 .password("123").email("email")
                 .build();
 
         mockMvc.perform(post("/user")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsBytes(user))
+                .content(mapper.writeValueAsBytes(userDto))
+        )
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors", hasSize(4)))
+                .andExpect(jsonPath("$.errors", containsInAnyOrder(
+                        "Username can't be empty",
+                               "Name must be between 4 and 20 in length",
+                               "Password must be minimum 8 characters in length and include at least one digit, lower-case, " +
+                                    "upper-case and special characters and mustn't include any space symbols",
+                               "Wrong email"
+                )));
+
+        verifyNoInteractions(userRepo);
+    }
+
+    @Test
+    public void add_UserWithExistingName_ShouldReturnValidationError() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+
+        UserDto userDto = new UserDtoBuilder().username("test user")
+                .build();
+
+        User existingUser = new UserBuilder().username("test user").build();
+
+        when(userRepo.findByUsername("test user")).thenReturn(Optional.ofNullable(existingUser));
+
+        mockMvc.perform(post("/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(userDto))
+        )
+                .andExpect(status().isConflict());
+
+        verify(userRepo, times(1)).findByUsername("test user");
+        verifyNoMoreInteractions(userRepo);
+    }
+
+    @Test
+    public void add_User_ShouldAddUserAndReturnLocationHeader() throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+
+        UserDto userDto = new UserDtoBuilder().username("test user")
+                .password("tT#11111").email("email@test.ru")
+                .build();
+
+        User added = new UserBuilder().id(1L).username("test user")
+                .password("tT#11111").email("email@test.ru")
+                .build();
+
+        when(userRepo.save(ArgumentMatchers.any(User.class))).thenReturn(added);
+
+        mockMvc.perform(post("/user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(userDto))
+        )
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "http://localhost/user/1"));
+
+        verify(userRepo, times(1)).save(ArgumentMatchers.any(User.class));
+    }
+
+    //PATCH
+    @Test
+    public void patch_UserWithNoAccess_ShouldReturnForbidden() throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        UserProfilePatch patch = new UserProfilePatch("new user", "new info", "newmail@mail.ru",
+                "tT#12111", "tT1#1111", null,
+                new RoleBuilder().name("ROLE_MODERATOR").build());
+
+        mockMvc.perform(patch("/user/{id}", 2L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(patch))
+        )
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userRepo);
+    }
+
+    @Test
+    public void patch_UserWithInvalidFields_ShouldReturnValidationError() throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        UserProfilePatch patch = new UserProfilePatch("u", "new info", "mail",
+                "p", "tT1#1111", null,
+                new RoleBuilder().name("ROLE_MODERATOR").build());
+
+        mockMvc.perform(patch("/user/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(patch))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors", hasSize(3)))
                 .andExpect(jsonPath("$.errors", containsInAnyOrder(
-                        "Username can't be empty",
-                               "Password must be minimum 8 characters in length and include at least one digit, lower-case, " +
-                                    "upper-case and special characters and mustn't include any space symbols",
-                               "Email can't be null"
+                        "Name must be between 4 and 20 in length",
+                        "Password must be minimum 8 characters in length and include at least one digit, lower-case, " +
+                                "upper-case and special characters and mustn't include any space symbols",
+                        "Wrong email"
                 )));
 
         verifyNoInteractions(userRepo);
     }
+
+    @Test
+    public void patch_UserWithWrongOldPassword_ShouldReturnForbidden1() throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        UserProfilePatch patch = new UserProfilePatch("new user", "new info", "newmail@mail.ru",
+                "tT#12111", "tT1#1111", null,
+                new RoleBuilder().name("ROLE_MODERATOR").build());
+
+        User patchedUser = new UserBuilder().id(1L).username("user").information("info")
+                .email("mail@mail.ru").password("tT3#1111").avatar(null)
+                .role(new RoleBuilder().id(1L).name("ROLE_USER").build()).build();
+
+        when(userRepo.findById(1L)).thenReturn(Optional.ofNullable(patchedUser));
+        when(encoder.matches(any(), any())).thenReturn(false);
+
+        mockMvc.perform(patch("/user/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(patch))
+        )
+                .andExpect(status().isForbidden());
+
+        verify(userRepo, times(1)).findById(1L);
+    }
+
+    @Test
+    public void patch_User_ShouldReturnPatchedUser() throws Exception {
+
+        ObjectMapper mapper = new ObjectMapper();
+
+        UserProfilePatch patch = new UserProfilePatch("new user", "new info", "newmail@mail.ru",
+                "tT#12111", "tT1#1111", null,
+                new RoleBuilder().name("ROLE_MODERATOR").build());
+
+        User patchedUser = new UserBuilder().id(1L).username("user").information("info")
+                .email("mail@mail.ru").password("tT1#1111").avatar(null)
+                .role(new Role(1L, "ROLE_USER", 0xFF00FF)).build();
+
+        User returnedUser = new UserBuilder().id(1L).username("user").information("new info")
+                .email("newmail@mail.ru").password("tT2#1111").avatar(null)
+                .role(new Role(1L, "ROLE_USER", 0xFF00FF)).build();
+
+        when(userRepo.findById(1L)).thenReturn(Optional.ofNullable(patchedUser));
+        when(userRepo.save(ArgumentMatchers.any(User.class))).thenReturn(returnedUser);
+        when(encoder.matches(any(), any())).thenReturn(true);
+
+        mockMvc.perform(patch("/user/{id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(patch))
+        )
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.username", is("user")))
+                .andExpect(jsonPath("$.email", is("newmail@mail.ru")))
+                .andExpect(jsonPath("$.information", is("new info")))
+                .andExpect(jsonPath("$.role.name", is("ROLE_USER")));
+
+        verify(userRepo, times(1)).save(ArgumentMatchers.any(User.class));
+    }
+
+    //DELETE
+    @Test
+    public void delete_UserWithNoAccess_ShouldReturnForbidden() throws Exception {
+
+        mockMvc.perform(delete("/user/{id}", 2L))
+                .andExpect(status().isForbidden());
+
+        verifyNoInteractions(userRepo);
+    }
+
+    @Test
+    public void delete_User_ShouldReturnNoContent() throws Exception {
+
+        mockMvc.perform(delete("/user/{id}", 1L))
+                .andExpect(status().isNoContent());
+
+        verify(userRepo, times(1)).deleteById(1L);
+        verifyNoMoreInteractions(userRepo);
+    }
+
+    //POST LOCK
+    @Test
+    public void postLock_UserWithInvalidId_ShouldReturnHttpStatusCode404() throws Exception {
+
+        mockMvc.perform(post("/user/{id}/lock", 1L))
+                .andExpect(status().isNotFound());
+
+        verify(userRepo, times(1)).findById(1L);
+        verifyNoMoreInteractions(userRepo);
+    }
+
+    @Test
+    public void postLock_User_ShouldReturnLockedUser() throws Exception {
+
+        User foundUser = new UserBuilder().nonLocked(true).build();
+        User returnedUser = new UserBuilder().nonLocked(false).build();
+
+        when(userRepo.findById(1L)).thenReturn(Optional.ofNullable(foundUser));
+        when(userRepo.save(ArgumentMatchers.any(User.class))).thenReturn(returnedUser);
+
+        mockMvc.perform(post("/user/{id}/lock", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.nonLocked", is(false)));
+
+        verify(userRepo, times(1)).findById(1L);
+        verify(userRepo, times(1)).save(ArgumentMatchers.any(User.class));
+        verifyNoMoreInteractions(userRepo);
+    }
+
+    private HandlerMethodArgumentResolver putAuthenticationPrincipal = new HandlerMethodArgumentResolver() {
+        @Override
+        public boolean supportsParameter(MethodParameter parameter) {
+            return parameter.getParameterType().isAssignableFrom(User.class);
+        }
+
+        @Override
+        public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
+                                      NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+            return new UserBuilder().id(1L).username("user").information("info")
+                    .email("mail@mail.ru").password("tT1#1111").avatar(null)
+                    .role(new Role(1L, "ROLE_USER", 0xFF00FF)).build();
+        }
+    };
 }

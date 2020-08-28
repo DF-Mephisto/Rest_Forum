@@ -1,17 +1,13 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.RoleBuilder;
-import my.project.forum.builder.TagBuilder;
-import my.project.forum.entity.Role;
+import my.project.forum.builder.entity.TagBuilder;
 import my.project.forum.entity.Tag;
-import my.project.forum.repository.RoleRepository;
 import my.project.forum.repository.TagRepository;
 import my.project.forum.security.UserRepositoryUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;

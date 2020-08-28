@@ -1,6 +1,7 @@
 package my.project.forum.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -14,6 +15,7 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name="topic")
+@AllArgsConstructor
 public class Topic {
 
     @Id
