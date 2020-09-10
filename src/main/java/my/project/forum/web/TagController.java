@@ -1,11 +1,12 @@
 package my.project.forum.web;
 
-import my.project.forum.entity.Tag;
+import my.project.forum.aop.annotation.Loggable;
+import my.project.forum.data.postgres.entity.Tag;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
 import my.project.forum.error.ItemNotFoundException;
-import my.project.forum.patch.TagPatch;
-import my.project.forum.repository.TagRepository;
+import my.project.forum.data.postgres.patch.TagPatch;
+import my.project.forum.data.postgres.repository.TagRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +29,14 @@ public class TagController {
     }
 
     @GetMapping(produces = "application/json")
+    @Loggable(method = "get", controller = "tag")
     public Iterable<Tag> getAllTags()
     {
         return tagRepo.findAll();
     }
 
     @PostMapping
+    @Loggable(method = "post", controller = "tag")
     public ResponseEntity<Object> newTag(@Valid @RequestBody Tag tag) {
         if (tagRepo.findByName(tag.getName()).isPresent())
             throw new ItemAlreadyExistsException("Tag with name " + tag.getName() + " already exists");
@@ -47,6 +50,7 @@ public class TagController {
     }
 
     @GetMapping("/{id}")
+    @Loggable(method = "get", controller = "tag")
     public Tag getTag(@PathVariable Long id)
     {
         return tagRepo.findById(id)
@@ -54,6 +58,7 @@ public class TagController {
     }
 
     @PatchMapping("/{id}")
+    @Loggable(method = "patch", controller = "tag")
     public Tag updateTag(@Valid @RequestBody TagPatch patch, @PathVariable Long id) {
 
         Tag patchedTag = tagRepo.findById(id)
@@ -75,6 +80,7 @@ public class TagController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
+    @Loggable(method = "delete", controller = "tag")
     public void deleteTag(@PathVariable Long id) {
         tagRepo.deleteById(id);
     }

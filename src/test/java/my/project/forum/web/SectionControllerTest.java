@@ -1,15 +1,15 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.dto.SectionDtoBuilder;
-import my.project.forum.builder.entity.SectionBuilder;
-import my.project.forum.builder.entity.TopicBuilder;
-import my.project.forum.dto.SectionDto;
-import my.project.forum.entity.Section;
-import my.project.forum.entity.Topic;
-import my.project.forum.patch.SectionPatch;
-import my.project.forum.repository.SectionRepository;
-import my.project.forum.repository.TopicRepository;
+import my.project.forum.data.builder.dto.SectionDtoBuilder;
+import my.project.forum.data.builder.entity.SectionBuilder;
+import my.project.forum.data.builder.entity.TopicBuilder;
+import my.project.forum.data.postgres.dto.SectionDto;
+import my.project.forum.data.postgres.entity.Section;
+import my.project.forum.data.postgres.entity.Topic;
+import my.project.forum.data.postgres.patch.SectionPatch;
+import my.project.forum.data.postgres.repository.SectionRepository;
+import my.project.forum.data.postgres.repository.TopicRepository;
 import my.project.forum.security.UserRepositoryUserDetailsService;
 import my.project.forum.service.Properties;
 import org.junit.jupiter.api.BeforeEach;

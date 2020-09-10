@@ -1,11 +1,12 @@
 package my.project.forum.web;
 
-import my.project.forum.entity.Role;
+import my.project.forum.aop.annotation.Loggable;
+import my.project.forum.data.postgres.entity.Role;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
 import my.project.forum.error.ItemNotFoundException;
-import my.project.forum.patch.RolePatch;
-import my.project.forum.repository.RoleRepository;
+import my.project.forum.data.postgres.patch.RolePatch;
+import my.project.forum.data.postgres.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +29,14 @@ public class RoleController {
     }
 
     @GetMapping(produces = "application/json")
+    @Loggable(method = "get", controller = "role")
     public Iterable<Role> getAllRoles()
     {
         return roleRepo.findAll();
     }
 
     @PostMapping
+    @Loggable(method = "post", controller = "role")
     public ResponseEntity<Object> newRole(@Valid @RequestBody Role role) {
         if (roleRepo.findByName(role.getName()).isPresent())
             throw new ItemAlreadyExistsException("Role with name " + role.getName() + " already exists");
@@ -47,6 +50,7 @@ public class RoleController {
     }
 
     @GetMapping("/{id}")
+    @Loggable(method = "get", controller = "role")
     public Role getRole(@PathVariable Long id)
     {
         return roleRepo.findById(id)
@@ -54,6 +58,7 @@ public class RoleController {
     }
 
     @PatchMapping("/{id}")
+    @Loggable(method = "patch", controller = "role")
     public Role updateRole(@Valid @RequestBody RolePatch patch, @PathVariable Long id) {
 
         Role patchedRole = roleRepo.findById(id)
@@ -81,6 +86,7 @@ public class RoleController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
+    @Loggable(method = "delete", controller = "role")
     public void deleteRole(@PathVariable Long id) {
 
         Role role = roleRepo.findById(id)

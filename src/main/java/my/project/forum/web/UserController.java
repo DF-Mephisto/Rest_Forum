@@ -1,13 +1,14 @@
 package my.project.forum.web;
 
-import my.project.forum.dto.UserDto;
-import my.project.forum.entity.User;
+import my.project.forum.aop.annotation.Loggable;
+import my.project.forum.data.postgres.dto.UserDto;
+import my.project.forum.data.postgres.entity.User;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
 import my.project.forum.error.ItemNotFoundException;
-import my.project.forum.patch.UserProfilePatch;
-import my.project.forum.repository.RoleRepository;
-import my.project.forum.repository.UserRepository;
+import my.project.forum.data.postgres.patch.UserProfilePatch;
+import my.project.forum.data.postgres.repository.RoleRepository;
+import my.project.forum.data.postgres.repository.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,12 +45,14 @@ public class UserController {
     }
 
     @GetMapping(produces = "application/json")
+    @Loggable(method = "get", controller = "user")
     public Iterable<User> getAllUsers()
     {
         return userRepo.findAll();
     }
 
     @PostMapping
+    @Loggable(method = "post", controller = "user")
     public ResponseEntity<Object> newUser(@Valid @RequestBody UserDto userDto) {
         User user = userDtoToUser(userDto);
 
@@ -66,6 +69,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @Loggable(method = "get", controller = "user")
     public User getUser(@PathVariable Long id)
     {
         return userRepo.findById(id)
@@ -73,6 +77,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
+    @Loggable(method = "patch", controller = "user")
     public User updateUser(@Valid @RequestBody UserProfilePatch patch,
                            @PathVariable Long id,
                            @AuthenticationPrincipal User user) {
@@ -138,6 +143,7 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
+    @Loggable(method = "delete", controller = "user")
     public void deleteUser(@PathVariable Long id,
                            @AuthenticationPrincipal User user,
                            HttpServletRequest request) throws ServletException {
@@ -153,6 +159,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/lock")
+    @Loggable(method = "post", controller = "user")
     public User lockUser(@PathVariable Long id)
     {
         return userRepo.findById(id)

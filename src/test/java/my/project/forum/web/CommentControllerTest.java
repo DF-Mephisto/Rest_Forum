@@ -1,15 +1,15 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.dto.CommentDtoBuilder;
-import my.project.forum.builder.dto.TopicDtoBuilder;
-import my.project.forum.builder.entity.*;
-import my.project.forum.dto.CommentDto;
-import my.project.forum.entity.*;
+import my.project.forum.data.builder.dto.CommentDtoBuilder;
+import my.project.forum.data.builder.dto.TopicDtoBuilder;
+import my.project.forum.data.builder.entity.*;
+import my.project.forum.data.postgres.dto.CommentDto;
+import my.project.forum.data.postgres.entity.*;
 import my.project.forum.error.CustomGlobalExceptionHandler;
-import my.project.forum.patch.CommentPatch;
-import my.project.forum.repository.CommentRepository;
-import my.project.forum.repository.LikeRepository;
+import my.project.forum.data.postgres.patch.CommentPatch;
+import my.project.forum.data.postgres.repository.CommentRepository;
+import my.project.forum.data.postgres.repository.LikeRepository;
 import my.project.forum.service.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

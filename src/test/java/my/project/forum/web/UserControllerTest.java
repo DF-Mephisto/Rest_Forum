@@ -1,16 +1,16 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.dto.UserDtoBuilder;
-import my.project.forum.builder.entity.RoleBuilder;
-import my.project.forum.builder.entity.UserBuilder;
-import my.project.forum.dto.UserDto;
-import my.project.forum.entity.Role;
-import my.project.forum.entity.User;
+import my.project.forum.data.builder.dto.UserDtoBuilder;
+import my.project.forum.data.builder.entity.RoleBuilder;
+import my.project.forum.data.builder.entity.UserBuilder;
+import my.project.forum.data.postgres.dto.UserDto;
+import my.project.forum.data.postgres.entity.Role;
+import my.project.forum.data.postgres.entity.User;
 import my.project.forum.error.CustomGlobalExceptionHandler;
-import my.project.forum.patch.UserProfilePatch;
-import my.project.forum.repository.RoleRepository;
-import my.project.forum.repository.UserRepository;
+import my.project.forum.data.postgres.patch.UserProfilePatch;
+import my.project.forum.data.postgres.repository.RoleRepository;
+import my.project.forum.data.postgres.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

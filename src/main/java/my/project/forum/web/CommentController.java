@@ -1,17 +1,17 @@
 package my.project.forum.web;
 
-import my.project.forum.dto.CommentDto;
-import my.project.forum.entity.Comment;
-import my.project.forum.entity.Like;
-import my.project.forum.entity.User;
+import my.project.forum.aop.annotation.Loggable;
+import my.project.forum.data.postgres.dto.CommentDto;
+import my.project.forum.data.postgres.entity.Comment;
+import my.project.forum.data.postgres.entity.Like;
+import my.project.forum.data.postgres.entity.User;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemNotFoundException;
-import my.project.forum.patch.CommentPatch;
-import my.project.forum.repository.CommentRepository;
-import my.project.forum.repository.LikeRepository;
+import my.project.forum.data.postgres.patch.CommentPatch;
+import my.project.forum.data.postgres.repository.CommentRepository;
+import my.project.forum.data.postgres.repository.LikeRepository;
 import my.project.forum.service.Properties;
 import org.modelmapper.ModelMapper;
-import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +46,7 @@ public class CommentController {
     }
 
     @GetMapping(produces = "application/json")
+    @Loggable(method = "get", controller = "comment")
     public Page<Comment> getComments(@RequestParam(value = "page", defaultValue = "0") int page)
     {
         Pageable pageable = PageRequest.of(page, props.getCommentsPageSize(),
@@ -55,6 +56,7 @@ public class CommentController {
     }
 
     @PostMapping
+    @Loggable(method = "post", controller = "comment")
     public ResponseEntity<Object> newComment(@Valid @RequestBody CommentDto commentDto,
                                              @AuthenticationPrincipal User user) {
 
@@ -80,6 +82,7 @@ public class CommentController {
     }
 
     @GetMapping("/{id}")
+    @Loggable(method = "get", controller = "comment")
     public Comment getComment(@PathVariable Long id)
     {
         return commentRepo.findById(id)
@@ -87,6 +90,7 @@ public class CommentController {
     }
 
     @PatchMapping("/{id}")
+    @Loggable(method = "patch", controller = "comment")
     public Comment updateComment(@Valid @RequestBody CommentPatch patch,
                                  @PathVariable Long id,
                                  @AuthenticationPrincipal User user) {
@@ -115,6 +119,7 @@ public class CommentController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
+    @Loggable(method = "delete", controller = "comment")
     public void deleteComment(@PathVariable Long id,
                               @AuthenticationPrincipal User user) {
         Comment comment = commentRepo.findById(id)
@@ -132,6 +137,7 @@ public class CommentController {
     }
 
     @GetMapping("/{id}/likes")
+    @Loggable(method = "get", controller = "comment")
     public Iterable<Like> getLikes(@PathVariable Long id)
     {
         if (commentRepo.findById(id).isEmpty())
@@ -143,6 +149,7 @@ public class CommentController {
     @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}/likes")
+    @Loggable(method = "delete", controller = "comment")
     public void deleteLike(@PathVariable Long id,
                            @AuthenticationPrincipal User user) {
         likeRepo.deleteByCommentIdAndUserId(id, user.getId());

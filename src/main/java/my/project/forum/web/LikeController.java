@@ -1,9 +1,10 @@
 package my.project.forum.web;
 
-import my.project.forum.dto.LikeDto;
-import my.project.forum.entity.Like;
-import my.project.forum.entity.User;
-import my.project.forum.repository.LikeRepository;
+import my.project.forum.aop.annotation.Loggable;
+import my.project.forum.data.postgres.dto.LikeDto;
+import my.project.forum.data.postgres.entity.Like;
+import my.project.forum.data.postgres.entity.User;
+import my.project.forum.data.postgres.repository.LikeRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,12 +24,14 @@ public class LikeController {
     }
 
     @GetMapping(produces = "application/json")
+    @Loggable(method = "get", controller = "like")
     public Iterable<Like> getLikes()
     {
         return likeRepo.findAll();
     }
 
     @PostMapping
+    @Loggable(method = "post", controller = "like")
     public Like newLike(@Valid @RequestBody LikeDto likeDto,
                         @AuthenticationPrincipal User user) {
         Like like = likeDtoToLike(likeDto);

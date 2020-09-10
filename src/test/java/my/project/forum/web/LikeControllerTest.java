@@ -1,12 +1,12 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.dto.CommentDtoBuilder;
-import my.project.forum.builder.dto.LikeDtoBuilder;
-import my.project.forum.builder.entity.*;
-import my.project.forum.dto.LikeDto;
-import my.project.forum.entity.Like;
-import my.project.forum.repository.LikeRepository;
+import my.project.forum.data.builder.dto.CommentDtoBuilder;
+import my.project.forum.data.builder.dto.LikeDtoBuilder;
+import my.project.forum.data.builder.entity.*;
+import my.project.forum.data.postgres.dto.LikeDto;
+import my.project.forum.data.postgres.entity.Like;
+import my.project.forum.data.postgres.repository.LikeRepository;
 import my.project.forum.security.UserRepositoryUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

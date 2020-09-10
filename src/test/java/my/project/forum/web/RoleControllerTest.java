@@ -1,9 +1,9 @@
 package my.project.forum.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import my.project.forum.builder.entity.RoleBuilder;
-import my.project.forum.entity.Role;
-import my.project.forum.repository.RoleRepository;
+import my.project.forum.data.builder.entity.RoleBuilder;
+import my.project.forum.data.postgres.entity.Role;
+import my.project.forum.data.postgres.repository.RoleRepository;
 import my.project.forum.security.UserRepositoryUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

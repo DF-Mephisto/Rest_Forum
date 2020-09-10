@@ -1,13 +1,14 @@
 package my.project.forum.web;
 
-import my.project.forum.dto.SectionDto;
-import my.project.forum.entity.Section;
-import my.project.forum.entity.Topic;
+import my.project.forum.aop.annotation.Loggable;
+import my.project.forum.data.postgres.dto.SectionDto;
+import my.project.forum.data.postgres.entity.Section;
+import my.project.forum.data.postgres.entity.Topic;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemNotFoundException;
-import my.project.forum.patch.SectionPatch;
-import my.project.forum.repository.SectionRepository;
-import my.project.forum.repository.TopicRepository;
+import my.project.forum.data.postgres.patch.SectionPatch;
+import my.project.forum.data.postgres.repository.SectionRepository;
+import my.project.forum.data.postgres.repository.TopicRepository;
 import my.project.forum.service.Properties;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ public class SectionController {
     }
 
     @GetMapping(produces = "application/json")
+    @Loggable(method = "get", controller = "section")
     public Page<Section> getSections(@RequestParam(value = "page", defaultValue = "0") int page)
     {
         Pageable pageable = PageRequest.of(page, props.getSectionsPageSize(),
@@ -51,6 +53,7 @@ public class SectionController {
     }
 
     @PostMapping
+    @Loggable(method = "post", controller = "section")
     public ResponseEntity<Object> newSection(@Valid @RequestBody SectionDto sectionDto) {
         Section section = sectionDtoToSection(sectionDto);
 
@@ -63,6 +66,7 @@ public class SectionController {
     }
 
     @GetMapping("/{id}")
+    @Loggable(method = "get", controller = "section")
     public Section getSections(@PathVariable Long id)
     {
         return sectionRepo.findById(id)
@@ -70,6 +74,7 @@ public class SectionController {
     }
 
     @PatchMapping("/{id}")
+    @Loggable(method = "patch", controller = "section")
     public Section updateSection(@Valid @RequestBody SectionPatch patch, @PathVariable Long id) {
 
         Section patchedSection = sectionRepo.findById(id)
@@ -88,11 +93,13 @@ public class SectionController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
+    @Loggable(method = "delete", controller = "section")
     public void deleteSection(@PathVariable Long id) {
         sectionRepo.deleteById(id);
     }
 
     @GetMapping("/{id}/topics")
+    @Loggable(method = "get", controller = "section")
     public Page<Topic> getSectionTopics(@PathVariable Long id,
                                    @RequestParam(value = "page", defaultValue = "0") int page)
     {

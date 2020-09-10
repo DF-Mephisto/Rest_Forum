@@ -1,14 +1,15 @@
 package my.project.forum.web;
 
-import my.project.forum.dto.TopicDto;
-import my.project.forum.entity.Comment;
-import my.project.forum.entity.Topic;
-import my.project.forum.entity.User;
+import my.project.forum.aop.annotation.Loggable;
+import my.project.forum.data.postgres.dto.TopicDto;
+import my.project.forum.data.postgres.entity.Comment;
+import my.project.forum.data.postgres.entity.Topic;
+import my.project.forum.data.postgres.entity.User;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemNotFoundException;
-import my.project.forum.patch.TopicPatch;
-import my.project.forum.repository.CommentRepository;
-import my.project.forum.repository.TopicRepository;
+import my.project.forum.data.postgres.patch.TopicPatch;
+import my.project.forum.data.postgres.repository.CommentRepository;
+import my.project.forum.data.postgres.repository.TopicRepository;
 import my.project.forum.service.Properties;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class TopicController {
     }
 
     @GetMapping(produces = "application/json")
+    @Loggable(method = "get", controller = "topic")
     public Page<Topic> getTopics(@RequestParam(value = "page", defaultValue = "0") int page)
     {
         Pageable pageable = PageRequest.of(page, props.getTopicsPageSize(),
@@ -53,6 +55,7 @@ public class TopicController {
     }
 
     @PostMapping
+    @Loggable(method = "post", controller = "topic")
     public ResponseEntity<Object> newTopic(@Valid @RequestBody TopicDto topicDto,
                                            @AuthenticationPrincipal User user) {
 
@@ -69,6 +72,7 @@ public class TopicController {
     }
 
     @GetMapping("/{id}")
+    @Loggable(method = "get", controller = "topic")
     public Topic getTopic(@PathVariable Long id)
     {
         Topic t = topicRepo.findById(id)
@@ -81,6 +85,7 @@ public class TopicController {
     }
 
     @PatchMapping("/{id}")
+    @Loggable(method = "patch", controller = "topic")
     public Topic updateTopic(@Valid @RequestBody TopicPatch patch, @PathVariable Long id) {
 
         Topic patchedTopic = topicRepo.findById(id)
@@ -102,11 +107,13 @@ public class TopicController {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/{id}")
+    @Loggable(method = "delete", controller = "topic")
     public void deleteTopic(@PathVariable Long id) {
         topicRepo.deleteById(id);
     }
 
     @GetMapping("/{id}/comments")
+    @Loggable(method = "get", controller = "topic")
     public Page<Comment> getComments(@PathVariable Long id,
                                      @RequestParam(value = "page", defaultValue = "0") int page)
     {

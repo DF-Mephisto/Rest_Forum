@@ -1,7 +1,7 @@
 package my.project.forum.security;
 
-import my.project.forum.entity.User;
-import my.project.forum.repository.UserRepository;
+import my.project.forum.data.postgres.entity.User;
+import my.project.forum.data.postgres.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

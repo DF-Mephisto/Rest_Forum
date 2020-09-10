@@ -11,6 +11,7 @@ public class Properties {
     private int sectionsPageSize;
     private int topicsPageSize;
     private int commentsPageSize;
+    private int logPageSize;
 
     public void setSectionsPageSize(int sectionsPageSize)
     {
@@ -23,5 +24,9 @@ public class Properties {
     public void setCommentsPageSize(int commentsPageSize)
     {
         this.commentsPageSize = commentsPageSize;
+    }
+    public void setLogPageSize(int logPageSize)
+    {
+        this.logPageSize = logPageSize;
     }
 }

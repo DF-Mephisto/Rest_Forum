@@ -66,6 +66,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 //LIKES
                 .antMatchers(HttpMethod.POST,"/likes").authenticated()
 
+                //LOGS
+                .antMatchers("/log/**").hasRole("ADMIN")
+
                 .antMatchers("/", "/**").permitAll()
                 .and().formLogin().loginPage("/login")
                 .and().logout().logoutSuccessUrl("/")
