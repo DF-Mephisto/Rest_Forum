@@ -1,22 +1,44 @@
 package my.project.forum.security;
 
+import my.project.forum.service.CustomAuthenticationFailureHandler;
+import my.project.forum.service.CustomBasicAuthenticationEntryPoint;
+import my.project.forum.service.NoRedirectStrategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
+    @Autowired
+    private CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
+
     @Bean
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    SimpleUrlAuthenticationSuccessHandler successHandler() {
+        final SimpleUrlAuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler();
+        successHandler.setRedirectStrategy(new NoRedirectStrategy());
+        return successHandler;
+    }
+
+    @Bean
+    CustomAuthenticationFailureHandler failureHandler() {
+        final CustomAuthenticationFailureHandler failureHandler = new CustomAuthenticationFailureHandler();
+        return failureHandler;
     }
 
     @Autowired
@@ -70,8 +92,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/log/**").hasRole("ADMIN")
 
                 .antMatchers("/", "/**").permitAll()
-                .and().formLogin().loginPage("/login")
-                .and().logout().logoutSuccessUrl("/")
+                .and()
+                .exceptionHandling()
+                    .authenticationEntryPoint(authenticationEntryPoint)
+                .and().formLogin()
+                    .successHandler(successHandler())
+                    .failureHandler(failureHandler())
+                .and().logout()
+                    .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler(HttpStatus.NO_CONTENT))
                 .and().rememberMe().key("uniqueAndSecret")
                 .and().csrf().disable();
     }
