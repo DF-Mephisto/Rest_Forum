@@ -2,7 +2,10 @@ package my.project.forum.web;
 
 import my.project.forum.aop.annotation.Loggable;
 import my.project.forum.data.postgres.dto.UserDto;
+import my.project.forum.data.postgres.entity.Like;
+import my.project.forum.data.postgres.entity.Reputation;
 import my.project.forum.data.postgres.entity.User;
+import my.project.forum.data.postgres.repository.ReputationRepository;
 import my.project.forum.error.ActionNotAllowed;
 import my.project.forum.error.ItemAlreadyExistsException;
 import my.project.forum.error.ItemNotFoundException;
@@ -18,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -32,15 +36,18 @@ public class UserController {
 
     private UserRepository userRepo;
     private RoleRepository roleRepo;
+    private ReputationRepository repRepo;
     private PasswordEncoder encoder;
 
     @Autowired
     public UserController(UserRepository userRepo,
                           RoleRepository roleRepo,
+                          ReputationRepository repRepo,
                           PasswordEncoder encoder)
     {
         this.userRepo = userRepo;
         this.roleRepo = roleRepo;
+        this.repRepo = repRepo;
         this.encoder = encoder;
     }
 
@@ -168,6 +175,16 @@ public class UserController {
                     return userRepo.save(x);
                 })
                 .orElseThrow(() -> new ItemNotFoundException("User with id " + id + " doesn't exist"));
+    }
+
+    @GetMapping("/{id}/reputation")
+    @Loggable(method = "get", controller = "user")
+    public Iterable<Reputation> getRep(@PathVariable Long id)
+    {
+        if (userRepo.findById(id).isEmpty())
+            throw new ItemNotFoundException("User with id " + id + " doesn't exist");
+
+        return repRepo.findAllByTargetId(id);
     }
 
     private User userDtoToUser(UserDto userDto)

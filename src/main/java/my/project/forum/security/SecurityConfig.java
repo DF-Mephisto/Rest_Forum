@@ -88,6 +88,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 //LIKES
                 .antMatchers(HttpMethod.POST,"/likes").authenticated()
 
+                //REPUTATIONS
+                .antMatchers(HttpMethod.DELETE,"/reputations/*").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST,"/reputations").authenticated()
+
                 //LOGS
                 .antMatchers("/log/**").hasRole("ADMIN")
 

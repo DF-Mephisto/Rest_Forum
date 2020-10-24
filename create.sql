@@ -50,6 +50,12 @@ create table if not exists gen.user_info (id int8 not null,
                                           role_id int8,
                                           primary key (id));
 
+create table if not exists gen.reputation (id int8 not null,
+                                           msg varchar(100),
+                                           user_id int8,
+                                           target_user_id int8 not null,
+                                           primary key (id));
+
 alter table if exists gen.role
     add constraint UK_8sewwnpamngi6b1dwaa88askk unique (name);
 
@@ -121,3 +127,15 @@ alter table if exists gen.user_info
         foreign key (role_id) references gen.role
             ON UPDATE CASCADE
             ON DELETE SET NULL;
+
+alter table if exists gen.reputation
+    add constraint REP_USER_FK
+        foreign key (user_id) references gen.user_info
+            ON UPDATE CASCADE
+            ON DELETE SET NULL;
+
+alter table if exists gen.reputation
+    add constraint REP_TARGET_USER_FK
+        foreign key (target_user_id) references gen.user_info
+            ON UPDATE CASCADE
+            ON DELETE CASCADE;

@@ -3,10 +3,12 @@ package my.project.forum.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import my.project.forum.data.builder.dto.UserDtoBuilder;
 import my.project.forum.data.builder.entity.RoleBuilder;
+import my.project.forum.data.builder.entity.SectionBuilder;
+import my.project.forum.data.builder.entity.TopicBuilder;
 import my.project.forum.data.builder.entity.UserBuilder;
 import my.project.forum.data.postgres.dto.UserDto;
-import my.project.forum.data.postgres.entity.Role;
-import my.project.forum.data.postgres.entity.User;
+import my.project.forum.data.postgres.entity.*;
+import my.project.forum.data.postgres.repository.ReputationRepository;
 import my.project.forum.error.CustomGlobalExceptionHandler;
 import my.project.forum.data.postgres.patch.UserProfilePatch;
 import my.project.forum.data.postgres.repository.RoleRepository;
@@ -18,6 +20,7 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -50,13 +53,16 @@ public class UserControllerTest {
     private RoleRepository roleRepo;
 
     @MockBean
+    private ReputationRepository repRepo;
+
+    @MockBean
     private PasswordEncoder encoder;
 
     @BeforeEach
     public void setUp()
     {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new UserController(userRepo, roleRepo, encoder))
+                .standaloneSetup(new UserController(userRepo, roleRepo, repRepo, encoder))
                 .setControllerAdvice(new CustomGlobalExceptionHandler())
                 .setCustomArgumentResolvers(putAuthenticationPrincipal)
                 .build();
@@ -346,6 +352,44 @@ public class UserControllerTest {
         verify(userRepo, times(1)).findById(1L);
         verify(userRepo, times(1)).save(ArgumentMatchers.any(User.class));
         verifyNoMoreInteractions(userRepo);
+    }
+
+    //GET REPUTATIONS
+    @Test
+    public void findReputationsByTargetUserId_UserNotFound_ShouldReturnHttpStatusCode404() throws Exception {
+        mockMvc.perform(get("/user/{id}/reputation", 1L))
+                .andExpect(status().isNotFound());
+
+        verify(userRepo, times(1)).findById(1L);
+        verifyNoMoreInteractions(userRepo);
+    }
+
+    @Test
+    public void findReputationsByTargetUserId_User_ShouldReturnFoundReputations() throws Exception {
+
+        User found = new UserBuilder().id(1L).build();
+
+        Reputation rep1 = Reputation.builder().id(0L).msg("thanks1").target(found).build();
+        Reputation rep2 = Reputation.builder().id(1L).msg("thanks2").target(found).build();
+
+        when(userRepo.findById(1L)).thenReturn(Optional.ofNullable(found));
+        Mockito.when(repRepo.findAllByTargetId(eq(1L)))
+                .thenReturn(Arrays.asList(rep1, rep2));
+
+        mockMvc.perform(get("/user/{id}/reputation", 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id", is(0)))
+                .andExpect(jsonPath("$[0].msg", is("thanks1")))
+                .andExpect(jsonPath("$[1].id", is(1)))
+                .andExpect(jsonPath("$[1].msg", is("thanks2")));
+
+        verify(userRepo, times(1)).findById(1L);
+        verifyNoMoreInteractions(userRepo);
+
+        verify(repRepo, times(1)).findAllByTargetId(eq(1L));
+        verifyNoMoreInteractions(repRepo);
     }
 
     private HandlerMethodArgumentResolver putAuthenticationPrincipal = new HandlerMethodArgumentResolver() {

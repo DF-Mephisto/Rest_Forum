@@ -13,7 +13,7 @@ public class UserBuilder {
     private String information = "user info";
     private String email = "test@test.com";
     private LocalDate registrationDate = LocalDate.of(2020, 8, 27);
-    private byte[] avatar = {1, 2, 3};
+    private byte[] avatar = new byte[]{1, 2, 3};
     private Role role = new RoleBuilder().id(0L).name("ROLE_USER").color(0xFFFFFF).build();
     private boolean nonLocked = true;
 
